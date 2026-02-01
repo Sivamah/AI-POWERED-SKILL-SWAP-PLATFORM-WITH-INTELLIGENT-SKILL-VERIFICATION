@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlmodel
+scikit-learn
+python-jose[cryptography]
+passlib[argon2]
+python-multipart
+numpy
