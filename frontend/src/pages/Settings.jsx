@@ -54,13 +54,13 @@ function Settings({ token }) {
                 try {
                     skillsOffered = data.skills_offered ? JSON.parse(data.skills_offered) : [];
                     if (!Array.isArray(skillsOffered)) skillsOffered = [];
-                } catch (e) { console.error(e); skillsOffered = []; }
+                } catch { skillsOffered = []; }
 
                 let skillsWanted = [];
                 try {
                     skillsWanted = data.skills_wanted ? JSON.parse(data.skills_wanted) : [];
                     if (!Array.isArray(skillsWanted)) skillsWanted = [];
-                } catch (e) { console.error(e); skillsWanted = []; }
+                } catch { skillsWanted = []; }
 
                 setProfile({
                     skills_offered: skillsOffered,
@@ -105,9 +105,7 @@ function Settings({ token }) {
                 } else {
                     setShowMCQModal(true);
                 }
-            } catch (err) {
-                console.error("Classification failed", err);
-                // Default to MCQ
+            } catch {
                 setSelectedSkill(skillToAdd);
                 setShowMCQModal(true);
             } finally {
@@ -176,13 +174,13 @@ function Settings({ token }) {
                 try {
                     skillsOffered = updatedData.skills_offered ? JSON.parse(updatedData.skills_offered) : []
                     if (!Array.isArray(skillsOffered)) skillsOffered = []
-                } catch (e) { console.error(e); skillsOffered = [] }
+                } catch { skillsOffered = [] }
 
                 let skillsWanted = []
                 try {
                     skillsWanted = updatedData.skills_wanted ? JSON.parse(updatedData.skills_wanted) : []
                     if (!Array.isArray(skillsWanted)) skillsWanted = []
-                } catch (e) { console.error(e); skillsWanted = [] }
+                } catch { skillsWanted = [] }
 
                 setProfile({
                     skills_offered: skillsOffered,
@@ -200,29 +198,19 @@ function Settings({ token }) {
                 setMessage({ type: 'error', text: errorData.detail || 'Failed to update profile' })
             }
         } catch (error) {
-            console.error('Save error:', error)
             setMessage({ type: 'error', text: 'An error occurred while saving' })
         }
     }
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
         </div>
     );
 
     return (
         <div className="max-w-4xl mx-auto py-12 px-4 animate-fade-in">
-            {/* Background Decor - Warm Gray + Beige + Soft Gold Theme */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-                {/* Neutral Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-neutral-900 to-stone-900"></div>
-                <div className="absolute inset-0 bg-gradient-to-tr from-stone-800/40 via-transparent to-neutral-800/30"></div>
 
-                {/* Soft Gold Accents */}
-                <div className="absolute top-[10%] right-[20%] w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[100px] animate-float"></div>
-                <div className="absolute bottom-[20%] left-[15%] w-[400px] h-[400px] bg-stone-500/10 rounded-full blur-[80px]"></div>
-            </div>
 
             <div className="flex items-center justify-between mb-8">
                 <header className="mb-8 animate-slide-up">
@@ -230,7 +218,7 @@ function Settings({ token }) {
                     <p className="text-stone-400 font-light">Manage your professional profile and preferences.</p>
                 </header>
                 {message.text && (
-                    <div className={`px-4 py-2 rounded-xl text-sm font-bold animate-slide-in-right ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                    <div className={`px-4 py-2 rounded-xl text-sm font-bold animate-slide-in-right ${message.type === 'success' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                         {message.text}
                     </div>
                 )}
@@ -242,7 +230,7 @@ function Settings({ token }) {
                 <div className="md:col-span-4 space-y-6">
                     <div className="glass-card p-6 text-center border-stone-500/10">
                         <div className="relative w-32 h-32 mx-auto mb-4 group">
-                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-stone-500/20 rounded-full blur opacity-40 group-hover:opacity-60 transition-opacity"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-stone-500/20 rounded-full blur opacity-40 group-hover:opacity-60 transition-opacity"></div>
                             <div className="relative w-full h-full rounded-full border-4 border-black/50 overflow-hidden bg-stone-800">
                                 {user.profile_photo_url ? (
                                     <img src={user.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
@@ -265,7 +253,7 @@ function Settings({ token }) {
                             onChange={handleChange}
                             rows="6"
                             placeholder="Share your expertise, interests, and what you're looking to learn..."
-                            className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 resize-none focus:border-amber-500/30 focus:bg-black/30"
+                            className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 resize-none focus:border-blue-500/30 focus:bg-black/30"
                         />
                     </div>
                 </div>
@@ -275,7 +263,7 @@ function Settings({ token }) {
                     <div className="glass-card p-8 space-y-8 border-stone-500/10">
                         <div>
                             <h3 className="text-xl font-bold text-stone-200 mb-6 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                                <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
                                 Personal Information
                             </h3>
 
@@ -287,7 +275,7 @@ function Settings({ token }) {
                                         name="name"
                                         value={user.name}
                                         onChange={handleChange}
-                                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-amber-500/30 focus:bg-black/30"
+                                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-blue-500/30 focus:bg-black/30"
                                         placeholder="e.g. Alex Chen"
                                     />
                                 </div>
@@ -298,7 +286,7 @@ function Settings({ token }) {
                                         name="education"
                                         value={user.education}
                                         onChange={handleChange}
-                                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-amber-500/30 focus:bg-black/30"
+                                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-blue-500/30 focus:bg-black/30"
                                         placeholder="e.g. MS in Computer Science"
                                     />
                                 </div>
@@ -309,7 +297,7 @@ function Settings({ token }) {
 
                         <div>
                             <h3 className="text-lg font-bold text-stone-200 mb-6 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-amber-600/50 rounded-full"></span>
+                                <span className="w-1.5 h-6 bg-blue-600/50 rounded-full"></span>
                                 Professional Presence
                             </h3>
                             <div className="space-y-6">
@@ -320,7 +308,7 @@ function Settings({ token }) {
                                         name="profile_photo_url"
                                         value={user.profile_photo_url}
                                         onChange={handleChange}
-                                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-amber-500/30 focus:bg-black/30"
+                                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-blue-500/30 focus:bg-black/30"
                                         placeholder="https://..."
                                     />
                                 </div>
@@ -332,7 +320,7 @@ function Settings({ token }) {
                                             name="github_url"
                                             value={user.github_url}
                                             onChange={handleChange}
-                                            className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-amber-500/30 focus:bg-black/30"
+                                            className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-blue-500/30 focus:bg-black/30"
                                             placeholder="github.com/..."
                                         />
                                     </div>
@@ -343,7 +331,7 @@ function Settings({ token }) {
                                             name="linkedin_url"
                                             value={user.linkedin_url}
                                             onChange={handleChange}
-                                            className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-amber-500/30 focus:bg-black/30"
+                                            className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-stone-300 placeholder-stone-600 outline-none transition-all duration-300 focus:border-blue-500/30 focus:bg-black/30"
                                             placeholder="linkedin.com/in/..."
                                         />
                                     </div>
@@ -355,8 +343,8 @@ function Settings({ token }) {
 
                         <div>
                             <h3 className="text-xl font-bold text-stone-200 mb-6 flex items-center gap-3">
-                                <span className="w-1.5 h-6 bg-emerald-500/50 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]"></span>
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-emerald-400">
+                                <span className="w-1.5 h-6 bg-blue-500/50 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]"></span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-blue-400">
                                     Skills & Verification
                                 </span>
                             </h3>
@@ -364,7 +352,7 @@ function Settings({ token }) {
                             <div className="p-8 space-y-8 border border-white/5 rounded-2xl bg-black/20">
                                 {/* Header / Instruction */}
                                 <div className="flex items-start gap-4">
-                                    <div className="p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-emerald-400 hidden sm:block">
+                                    <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/10 text-blue-400 hidden sm:block">
                                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -373,9 +361,9 @@ function Settings({ token }) {
                                         <h4 className="text-lg font-semibold text-stone-200">Manage Your Expertise</h4>
                                         <p className="text-sm text-stone-400 leading-relaxed">
                                             Add skills to your profile.
-                                            <span className="text-amber-200/80 font-medium ml-1">All skills</span> will be
+                                            <span className="text-blue-200/80 font-medium ml-1">All skills</span> will be
                                             <span className="text-stone-300 font-bold mx-1">Verified</span>
-                                            via coding challenges or quizzes to earn the <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80 text-[10px] font-bold tracking-wide border border-emerald-500/20 align-middle">VERIFIED</span> badge.
+                                            via coding challenges or quizzes to earn the <span className="inline-block px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400/80 text-[10px] font-bold tracking-wide border border-blue-500/20 align-middle">VERIFIED</span> badge.
                                         </p>
                                     </div>
                                 </div>
@@ -389,7 +377,7 @@ function Settings({ token }) {
                                                 type="text"
                                                 value={newSkill}
                                                 onChange={(e) => setNewSkill(e.target.value)}
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-stone-200 placeholder-stone-600 focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all outline-none"
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-stone-200 placeholder-stone-600 focus:border-blue-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-all outline-none"
                                                 placeholder="e.g. React, Python, Digital Marketing..."
                                                 onKeyDown={(e) => e.key === 'Enter' && handleAddSkill(e)}
                                             />
@@ -422,9 +410,9 @@ function Settings({ token }) {
                                             {profile.skills_offered.map((skill, index) => (
                                                 <div
                                                     key={index}
-                                                    className="group flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-amber-500/20 hover:bg-white/[0.08] transition-all"
+                                                    className="group flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/20 hover:bg-white/[0.08] transition-all"
                                                 >
-                                                    <span className="text-sm font-medium text-stone-300 group-hover:text-amber-100 transition-colors">{skill}</span>
+                                                    <span className="text-sm font-medium text-stone-300 group-hover:text-blue-100 transition-colors">{skill}</span>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDeleteSkill(skill)}
@@ -472,7 +460,7 @@ function Settings({ token }) {
                             </button>
                             <button
                                 type="submit"
-                                className="btn-settings px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold shadow-lg shadow-amber-900/20 transform hover:-translate-y-0.5 transition-all"
+                                className="btn-settings px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold shadow-lg shadow-blue-900/20 transform hover:-translate-y-0.5 transition-all"
                             >
                                 Save Changes
                             </button>

@@ -68,7 +68,7 @@ export default function ReviewModal({ isOpen, onClose, sessionId, onSuccess, tok
                     <textarea
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-24"
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none resize-none h-24"
                         placeholder="Great session! I learned a lot about..."
                     />
                 </div>
@@ -82,7 +82,7 @@ export default function ReviewModal({ isOpen, onClose, sessionId, onSuccess, tok
                 <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Submitting...' : 'Submit Review'}
                 </button>

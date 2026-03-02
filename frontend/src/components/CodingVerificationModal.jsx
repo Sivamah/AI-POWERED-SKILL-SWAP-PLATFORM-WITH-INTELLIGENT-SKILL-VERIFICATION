@@ -28,7 +28,6 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                 setFetchError(`No problems available for ${skill}. Please try a different language.`);
             }
         } catch (err) {
-            console.error("Failed to fetch problems:", err);
             setFetchError(err.response?.data?.detail || `Failed to load problems for ${skill}. Please try again.`);
         } finally {
             setLoading(false);
@@ -112,7 +111,6 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                 setExecutionError("Invalid response from server. Please try again.");
             }
         } catch (err) {
-            console.error(err);
             if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
                 setExecutionError("⏱️ Execution timed out. Java via Piston can take up to 30s on first run. Please try again.");
             } else {
@@ -190,7 +188,6 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                 setTestResults(res.data.results);
             }
         } catch (err) {
-            console.error(err);
             setExecutionError(err.response?.data?.detail || "Submission failed. Please try again.");
         } finally {
             setLoading(false);
@@ -213,8 +210,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
             } else {
                 setExecutionError(res.data.message);
             }
-        } catch (err) {
-            console.error(err);
+        } catch {
             setExecutionError("Final verification failed.");
         }
     };
@@ -231,15 +227,15 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 animate-fade-in text-white overflow-hidden">
 
             {/* Background Effects */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
             <div className="w-full max-w-6xl h-[90vh] bg-[#0f172a] rounded-xl border border-white/10 shadow-2xl flex flex-col relative overflow-hidden">
 
                 {/* Header */}
                 <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#0f172a]/50 backdrop-blur-md z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-mono font-bold">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-mono font-bold">
                             {skill === 'cpp' ? 'C++' : skill === 'csharp' ? 'C#' : skill.charAt(0).toUpperCase() + skill.slice(1)}
                         </div>
                         <h2 className="font-bold text-lg tracking-tight">Skill Verification</h2>
@@ -250,7 +246,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                             <div className="flex items-center gap-2 text-slate-400 text-sm">
                                 <span>Problem {step} of 2</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-600"></span>
-                                <span className={timeLeft < 300 ? "text-red-400 font-mono" : "text-emerald-400 font-mono"}>
+                                <span className={timeLeft < 300 ? "text-red-400 font-mono" : "text-blue-400 font-mono"}>
                                     {formatTime(timeLeft)}
                                 </span>
                             </div>
@@ -275,8 +271,8 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                 exit={{ opacity: 0, y: -20 }}
                                 className="h-full flex flex-col items-center justify-center text-center p-8 max-w-2xl mx-auto"
                             >
-                                <div className="w-20 h-20 bg-indigo-500/20 rounded-2xl flex items-center justify-center mb-6 ring-1 ring-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-                                    <svg className="w-10 h-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                                <div className="w-20 h-20 bg-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 ring-1 ring-cyan-500/50 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                                    <svg className="w-10 h-10 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                                 </div>
                                 <h1 className="text-3xl font-bold mb-4">Coding Challenge</h1>
                                 <p className="text-slate-400 text-lg mb-6 leading-relaxed">
@@ -287,11 +283,11 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
 
                                 <div className="grid grid-cols-2 gap-4 w-full mb-8">
                                     <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-left">
-                                        <div className="text-indigo-400 font-bold mb-1">Environment</div>
+                                        <div className="text-cyan-400 font-bold mb-1">Environment</div>
                                         <div className="text-sm text-slate-500">Standard libraries supported. No external packages.</div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-left">
-                                        <div className="text-indigo-400 font-bold mb-1">Evaluation</div>
+                                        <div className="text-cyan-400 font-bold mb-1">Evaluation</div>
                                         <div className="text-sm text-slate-500">Code is tested against both visible and hidden test cases.</div>
                                     </div>
                                 </div>
@@ -313,7 +309,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                 <button
                                     onClick={handleStart}
                                     disabled={loading || problems.length === 0 || !!fetchError}
-                                    className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
+                                    className="px-8 py-4 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
                                 >
                                     {loading ? "Loading Environment..." : fetchError ? "Cannot Start (Load Error)" : "Start Challenge"}
                                 </button>
@@ -333,7 +329,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                 <div className="col-span-4 flex flex-col h-full bg-[#111827] overflow-hidden">
                                     <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <span className={`px-2 py-0.5 rounded textxs font-bold uppercase tracking-wider ${problems[step - 1].difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                                            <span className={`px-2 py-0.5 rounded textxs font-bold uppercase tracking-wider ${problems[step - 1].difficulty === 'Easy' ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-500/10 text-blue-400'}`}>
                                                 {problems[step - 1].difficulty}
                                             </span>
                                         </div>
@@ -342,17 +338,17 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                             <p className="whitespace-pre-wrap">{problems[step - 1].description}</p>
 
                                             <h4 className="text-slate-200 mt-6 mb-2">Input Format</h4>
-                                            <code className="bg-black/30 px-2 py-1 rounded text-indigo-300 block mb-4">{problems[step - 1].input_format}</code>
+                                            <code className="bg-black/30 px-2 py-1 rounded text-cyan-300 block mb-4">{problems[step - 1].input_format}</code>
 
                                             <h4 className="text-slate-200 mb-2">Output Format</h4>
-                                            <code className="bg-black/30 px-2 py-1 rounded text-indigo-300 block mb-6">{problems[step - 1].output_format}</code>
+                                            <code className="bg-black/30 px-2 py-1 rounded text-cyan-300 block mb-6">{problems[step - 1].output_format}</code>
 
                                             <h4 className="text-slate-200 mb-2">Examples</h4>
                                             <div className="space-y-4">
                                                 {problems[step - 1].examples.map((ex, i) => (
                                                     <div key={i} className="bg-black/20 p-3 rounded-lg border border-white/5">
                                                         <div className="mb-1"><span className="text-slate-500 text-xs uppercase font-bold">Input:</span> <span className="font-mono text-xs">{ex.input}</span></div>
-                                                        <div className="mb-1"><span className="text-slate-500 text-xs uppercase font-bold">Output:</span> <span className="font-mono text-xs text-emerald-400">{ex.output}</span></div>
+                                                        <div className="mb-1"><span className="text-slate-500 text-xs uppercase font-bold">Output:</span> <span className="font-mono text-xs text-blue-400">{ex.output}</span></div>
                                                         {ex.explanation && <div className="text-xs text-slate-400 italic mt-1">{ex.explanation}</div>}
                                                     </div>
                                                 ))}
@@ -402,7 +398,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                                 <button
                                                     onClick={handleSubmitProblem}
                                                     disabled={loading}
-                                                    className="px-4 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-lg shadow-indigo-500/20"
+                                                    className="px-4 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition-colors shadow-lg shadow-cyan-500/20"
                                                 >
                                                     {loading ? "Evaluating..." : step === 2 ? "Final Submit" : "Submit & Next"}
                                                 </button>
@@ -434,7 +430,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                                         <div className="flex items-center justify-between text-xs">
                                                             <span className="text-slate-400">Test Results</span>
                                                             <div className="flex items-center gap-4">
-                                                                <span className="text-emerald-400">
+                                                                <span className="text-blue-400">
                                                                     ✓ {testResults.filter(r => r.passed).length} Passed
                                                                 </span>
                                                                 <span className="text-red-400">
@@ -452,7 +448,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                                         <div key={i} className="flex flex-col gap-2">
                                                             <div className="flex items-center gap-2">
                                                                 {res.passed ? (
-                                                                    <span className="text-emerald-400 flex items-center gap-1 font-bold">
+                                                                    <span className="text-blue-400 flex items-center gap-1 font-bold">
                                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                                                         Test Case {res.test_case}
                                                                     </span>
@@ -463,7 +459,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                                                     </span>
                                                                 )}
                                                                 <span className="text-slate-500 text-xs ml-auto flex items-center gap-2">
-                                                                    {res.is_hidden && <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-[10px] font-bold">HIDDEN</span>}
+                                                                    {res.is_hidden && <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-[10px] font-bold">HIDDEN</span>}
                                                                     {res.error_type && !res.passed && (
                                                                         <span className="px-2 py-0.5 bg-red-500/20 text-red-300 rounded text-[10px] font-bold uppercase">
                                                                             {res.error_type === 'timeout' ? 'TLE' : res.error_type === 'runtime_error' ? 'RE' : res.error_type === 'wrong_answer' ? 'WA' : 'ERR'}
@@ -481,7 +477,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                                                     {res.actual !== null && (
                                                                         <div className="grid grid-cols-[80px_1fr]">
                                                                             <span className="text-slate-500">Actual:</span>
-                                                                            <span className={`font-mono ${res.passed ? 'text-emerald-400' : 'text-red-400'}`}>{res.actual}</span>
+                                                                            <span className={`font-mono ${res.passed ? 'text-blue-400' : 'text-red-400'}`}>{res.actual}</span>
                                                                         </div>
                                                                     )}
                                                                     {res.error && (
@@ -524,13 +520,13 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="h-full flex flex-col items-center justify-center p-8 text-center"
                             >
-                                <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 relative">
-                                    <div className="absolute inset-0 border-2 border-emerald-500/30 rounded-full animate-ping-slow"></div>
-                                    <svg className="w-12 h-12 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                <div className="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mb-6 relative">
+                                    <div className="absolute inset-0 border-2 border-blue-500/30 rounded-full animate-ping-slow"></div>
+                                    <svg className="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                 </div>
                                 <h2 className="text-4xl font-bold mb-4 text-white">Expert Verified!</h2>
                                 <p className="text-slate-400 text-lg max-w-lg mb-8">
-                                    Incredible job. You've successfully solved both challenges and demonstrated mastery in <span className="text-emerald-400 font-bold">{skill}</span>.
+                                    Incredible job. You've successfully solved both challenges and demonstrated mastery in <span className="text-blue-400 font-bold">{skill}</span>.
                                 </p>
                                 <button onClick={() => onClose()} className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">
                                     View Dashboard

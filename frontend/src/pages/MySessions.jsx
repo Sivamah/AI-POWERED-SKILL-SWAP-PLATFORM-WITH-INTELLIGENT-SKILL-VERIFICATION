@@ -18,8 +18,7 @@ export default function MySessions({ token }) {
                 setSessions(res.data);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error(err);
+            .catch(() => {
                 setLoading(false);
             });
     }, [token, API_URL])
@@ -40,7 +39,6 @@ export default function MySessions({ token }) {
                 fetchSessions();
             })
             .catch(err => {
-                console.error(err);
                 alert(err.response?.data?.detail || "Failed to accept");
             });
     }
@@ -64,7 +62,7 @@ export default function MySessions({ token }) {
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
         </div>
     );
 
@@ -75,22 +73,7 @@ export default function MySessions({ token }) {
     return (
         <div className="max-w-5xl mx-auto px-4 py-8 space-y-12">
 
-            {/* My Sessions Background - Amber + Slate + Emerald */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-                {/* Roadmap / Path-Inspired Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900"></div>
-                <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/30 via-transparent to-emerald-900/20"></div>
 
-                {/* Progress Path Visualization */}
-                <div className="absolute left-[10%] top-[20%] w-1 h-[60%] bg-gradient-to-b from-amber-500/30 via-slate-500/20 to-emerald-500/30 blur-sm"></div>
-                <div className="absolute top-[20%] left-[10%] w-16 h-16 bg-amber-500/10 rounded-full blur-2xl animate-progress-slide"></div>
-                <div className="absolute top-[50%] left-[10%] w-20 h-20 bg-slate-400/10 rounded-full blur-2xl animate-progress-slide" style={{ animationDelay: '0.3s' }}></div>
-                <div className="absolute bottom-[20%] left-[10%] w-24 h-24 bg-emerald-500/10 rounded-full blur-3xl animate-progress-slide" style={{ animationDelay: '0.6s' }}></div>
-
-                {/* Ambient Circles */}
-                <div className="absolute top-[30%] right-[20%] w-96 h-96 bg-amber-600/5 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-[25%] right-[15%] w-80 h-80 bg-emerald-600/8 rounded-full blur-[100px]"></div>
-            </div>
 
             <header className="animate-slide-up">
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2 text-gradient-sessions">My Sessions</h1>
@@ -105,7 +88,7 @@ export default function MySessions({ token }) {
                     {/* Scheduled Section */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-2 h-8 bg-emerald-500 rounded-full"></div>
+                            <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
                             <h2 className="text-xl font-bold text-white">Scheduled</h2>
                             <span className="px-2 py-0.5 rounded-md bg-white/5 text-xs text-slate-400 border border-white/5">{upcoming.length}</span>
                         </div>
@@ -113,13 +96,13 @@ export default function MySessions({ token }) {
                         {upcoming.length > 0 ? (
                             <div className="space-y-4">
                                 {upcoming.map((s) => (
-                                    <div key={s.id} className="sessions-card p-6 border-l-4 border-l-emerald-500 hover:bg-white/[0.04]">
+                                    <div key={s.id} className="sessions-card p-6 border-l-4 border-l-cyan-500 hover:bg-white/[0.04]">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h3 className="text-xl font-bold text-white">{s.skill_name}</h3>
                                                 <p className="text-sm text-slate-400">with {s.other_user_name}</p>
                                             </div>
-                                            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded">
+                                            <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded">
                                                 {s.session_type}
                                             </span>
                                         </div>
@@ -135,7 +118,7 @@ export default function MySessions({ token }) {
                                             {!s.is_tutor && (
                                                 <button
                                                     onClick={() => handleComplete(s.id)}
-                                                    className="px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-sm font-medium transition-colors"
+                                                    className="px-4 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-sm font-medium transition-colors"
                                                     title="Mark session as finished to release credits"
                                                 >
                                                     Complete
@@ -155,7 +138,7 @@ export default function MySessions({ token }) {
                     {/* Pending Section */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-2 h-8 bg-amber-500 rounded-full"></div>
+                            <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
                             <h2 className="text-xl font-bold text-white">Pending Requests</h2>
                             <span className="px-2 py-0.5 rounded-md bg-white/5 text-xs text-slate-400 border border-white/5">{pending.length}</span>
                         </div>
@@ -163,25 +146,25 @@ export default function MySessions({ token }) {
                         {pending.length > 0 ? (
                             <div className="space-y-4">
                                 {pending.map((s) => (
-                                    <div key={s.id} className="sessions-card p-6 relative overflow-hidden border-l-4 border-l-amber-500">
-                                        <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl -mr-8 -mt-8"></div>
+                                    <div key={s.id} className="sessions-card p-6 relative overflow-hidden border-l-4 border-l-cyan-500">
+                                        <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl -mr-8 -mt-8"></div>
 
                                         <div className="flex justify-between items-center mb-4 relative z-10">
                                             <div>
                                                 <h3 className="text-lg font-bold text-white">{s.skill_name}</h3>
                                                 <p className="text-xs text-slate-400">Request from {s.other_user_name}</p>
                                             </div>
-                                            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                                         </div>
 
                                         {s.is_tutor ? (
                                             <div className="flex gap-3 relative z-10">
-                                                <button onClick={() => handleAccept(s.id)} className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-bold py-2 rounded-lg text-sm transition-colors">
+                                                <button onClick={() => handleAccept(s.id)} className="flex-1 bg-blue-500 hover:bg-blue-600 text-black font-bold py-2 rounded-lg text-sm transition-colors">
                                                     Accept Request
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="text-xs text-amber-500/80 italic relative z-10">Waiting for tutor approval...</div>
+                                            <div className="text-xs text-blue-500/80 italic relative z-10">Waiting for tutor approval...</div>
                                         )}
                                     </div>
                                 ))}
@@ -224,7 +207,7 @@ export default function MySessions({ token }) {
                                             {!s.is_tutor && !s.review_status ? (
                                                 <button
                                                     onClick={() => setReviewModal({ open: true, sessionId: s.id })}
-                                                    className="text-indigo-400 hover:text-indigo-300 text-xs font-bold uppercase tracking-wide"
+                                                    className="text-cyan-400 hover:text-cyan-300 text-xs font-bold uppercase tracking-wide"
                                                 >
                                                     Write Review
                                                 </button>

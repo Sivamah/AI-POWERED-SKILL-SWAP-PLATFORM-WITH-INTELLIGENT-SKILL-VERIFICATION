@@ -24,11 +24,10 @@ from migrations import run_migrations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Auto-accept configuration (for demo/testing mode only)
 # Demo Mode Configuration
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 if DEMO_MODE:
-    logger.warning("⚠️ DEMO MODE ENABLED - Auto-accept sessions & Demo User active")
+    logger.info("Demo mode enabled")
 
 # Use lifespan instead of deprecated on_event
 from contextlib import asynccontextmanager
@@ -159,6 +158,13 @@ async def update_user_me(user_update: UserUpdate, session: Session = Depends(get
     
     log_audit(session, "PROFILE_UPDATE", f"User updated profile: {user.email}", user.id)
     return user
+
+@app.get("/users/count")
+def get_users_count(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    """Return the total number of registered users."""
+    from sqlalchemy import func
+    count = session.exec(select(func.count(User.id))).one()
+    return {"total_users": count}
 
 # Matching Endpoint (The AI Part)
 @app.get("/find_tutor")

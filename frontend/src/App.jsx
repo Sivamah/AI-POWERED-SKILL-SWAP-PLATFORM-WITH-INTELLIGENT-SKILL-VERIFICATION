@@ -7,6 +7,7 @@ import FindTutor from './pages/FindTutor'
 import MySessions from './pages/MySessions'
 import SessionRoom from './pages/SessionRoom'
 import Settings from './pages/Settings'
+import SpaceBackground from './components/SpaceBackground'
 
 function App() {
     const [token, setToken] = useState(localStorage.getItem('token'))
@@ -16,13 +17,9 @@ function App() {
     useEffect(() => {
         const path = location.pathname
         if (token) {
-            if (path === '/login' || path === '/register') {
-                navigate('/')
-            }
+            if (path === '/login' || path === '/register') navigate('/')
         } else {
-            if (path !== '/register') {
-                navigate('/login')
-            }
+            if (path !== '/register') navigate('/login')
         }
     }, [token, location.pathname, navigate])
 
@@ -33,30 +30,49 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen font-sans pb-20">
+        /* ── Root shell — deep space foundation ── */
+        <div className="sp-app-root">
+
+            {/* ══════════════════════════════════════
+                GLOBAL SPACE BACKGROUND
+                Rendered once — NEVER unmounts on
+                page navigation → no flicker/reset
+                ══════════════════════════════════════ */}
+            <SpaceBackground />
+
+            {/* ══════════════════════════════════════
+                SPACE NAVIGATION BAR
+                ══════════════════════════════════════ */}
             {token && (
-                <div className="fixed top-0 left-0 w-full z-50 px-4 py-4 pointer-events-none">
-                    <nav className="glass-nav max-w-6xl mx-auto rounded-2xl shadow-2xl px-8 py-4 flex justify-between items-center pointer-events-auto border border-white/5">
-                        <div className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                            Skill Swap AI
+                <div className="sp-nav-wrap">
+                    <nav className="sp-nav">
+                        {/* Brand */}
+                        <div className="sp-nav-brand">
+                            <div className="sp-nav-logo">
+                                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={1.8}>
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                            </div>
+                            <span className="sp-nav-title">Skill Swap AI</span>
                         </div>
-                        <div className="flex gap-8 items-center">
-                            <Link to="/" className="text-sm font-semibold text-slate-300 hover:text-white transition-all hover:scale-105">Dashboard</Link>
-                            <Link to="/find-tutor" className="text-sm font-semibold text-slate-300 hover:text-white transition-all hover:scale-105">Find Tutor</Link>
-                            <Link to="/my-sessions" className="text-sm font-semibold text-slate-300 hover:text-white transition-all hover:scale-105">My Sessions</Link>
-                            <Link to="/settings" className="text-sm font-semibold text-slate-300 hover:text-white transition-all hover:scale-105">Settings</Link>
-                            <button
-                                onClick={logout}
-                                className="bg-white/5 hover:bg-red-500/20 text-slate-200 hover:text-red-400 px-5 py-2 rounded-xl text-sm font-bold transition-all border border-white/10 hover:border-red-500/30 backdrop-blur-md"
-                            >
-                                Logout
-                            </button>
+
+                        {/* Links */}
+                        <div className="sp-nav-links">
+                            <Link to="/" className="sp-nav-link">Dashboard</Link>
+                            <Link to="/find-tutor" className="sp-nav-link">Find Tutor</Link>
+                            <Link to="/my-sessions" className="sp-nav-link">My Sessions</Link>
+                            <Link to="/settings" className="sp-nav-link">Settings</Link>
+                            <button onClick={logout} className="sp-nav-logout">Logout</button>
                         </div>
                     </nav>
                 </div>
             )}
 
-            <div className={`container mx-auto px-4 ${token ? 'pt-36' : 'pt-0'} max-w-6xl`}>
+            {/* ══════════════════════════════════════
+                PAGE CONTENT
+                ══════════════════════════════════════ */}
+            <div className={`sp-page-content ${token ? 'sp-page-with-nav' : ''}`}>
                 <Routes>
                     <Route path="/login" element={<Login setToken={setToken} />} />
                     <Route path="/register" element={<Register />} />
