@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import CodingVerificationModal from "../components/CodingVerificationModal";
 import MCQVerificationModal from "../components/MCQVerificationModal";
+import { API_URL } from "../services/api";
 
 export default function Dashboard({ token }) {
   const [user, setUser] = useState(null);
@@ -14,8 +15,6 @@ export default function Dashboard({ token }) {
   const [verifyingSkill, setVerifyingSkill] = useState(null);
   const [totalUsers, setTotalUsers] = useState(null);
   const navigate = useNavigate();
-
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
   const fetchLearningPath = useCallback((skill) => {
     axios.get(`${API_URL}/learning-path/${skill}`)
@@ -338,6 +337,7 @@ export default function Dashboard({ token }) {
         skill={selectedSkill}
         onClose={() => setShowCodingModal(false)}
         onVerified={handleVerificationSuccess}
+        token={token}
       />
 
       <MCQVerificationModal
@@ -345,6 +345,7 @@ export default function Dashboard({ token }) {
         skill={selectedSkill}
         onClose={() => setShowMCQModal(false)}
         onVerified={handleVerificationSuccess}
+        token={token}
       />
 
     </div>

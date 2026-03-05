@@ -1,12 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../services/api";
 
 export default function FindTutor({ token }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searching, setSearching] = useState(false);
+    const [requestError, setRequestError] = useState("");
 
     // Session Request State
     const [requestModal, setRequestModal] = useState({ open: false, teacherId: null, skillName: null, teacherName: null });
@@ -15,14 +16,14 @@ export default function FindTutor({ token }) {
     const [detailModal, setDetailModal] = useState({ open: false, mentor: null });
 
     const navigate = useNavigate();
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (!query.trim()) return;
         setLoading(true);
-        setSearching(true);
-        axios.get(`${API_URL}/find_tutor?query=${query}`, {
+        setResults([]);
+        setRequestError("");
+        axios.get(`${API_URL}/find_tutor?query=${encodeURIComponent(query)}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => {
@@ -30,6 +31,7 @@ export default function FindTutor({ token }) {
                 setLoading(false);
             })
             .catch(() => {
+                setRequestError("Search failed. Please try again.");
                 setLoading(false);
             });
     }
@@ -40,22 +42,18 @@ export default function FindTutor({ token }) {
 
     const confirmRequest = (type) => {
         const { teacherId, skillName } = requestModal;
+        setRequestError("");
 
         axios.post(`${API_URL}/request_session`, null, {
             params: { teacher_id: teacherId, skill_name: skillName, session_type: type },
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => {
-                if (res.data.auto_accepted) {
-                    alert(`✅ Session auto-confirmed (Demo Mode)!\n\nMeet Link: ${res.data.meet_link}\n\nCheck 'My Sessions' for details.`);
-                } else {
-                    alert("Session requested! Check 'My Sessions' for status.");
-                }
                 setRequestModal({ open: false, teacherId: null, skillName: null, teacherName: null });
                 navigate('/my-sessions');
             })
             .catch(err => {
-                alert(err.response?.data?.detail || "Request failed");
+                setRequestError(err.response?.data?.detail || "Request failed. Please try again.");
                 setRequestModal({ open: false, teacherId: null, skillName: null, teacherName: null });
             });
     }
@@ -194,12 +192,14 @@ export default function FindTutor({ token }) {
                 ))}
             </div>
 
-            {searching && results.length === 0 && !loading && (
+            {results.length === 0 && !loading && query && (
                 <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 animate-fade-in opacity-50">
                     <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center text-slate-600">
                         <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
-                    <p className="text-slate-500 font-medium">No experts found matching your criteria.</p>
+                    <p className="text-slate-500 font-medium">
+                        {requestError || "No experts found matching your criteria."}
+                    </p>
                 </div>
             )}
 

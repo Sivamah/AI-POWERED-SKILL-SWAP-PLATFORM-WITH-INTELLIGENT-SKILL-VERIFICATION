@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import CodingVerificationModal from '../components/CodingVerificationModal'
 import MCQVerificationModal from '../components/MCQVerificationModal'
+import { API_URL, safeJsonParse } from '../services/api'
 
 function Settings({ token }) {
     const navigate = useNavigate()
@@ -30,14 +31,10 @@ function Settings({ token }) {
     const [showMCQModal, setShowMCQModal] = useState(false);
     const [verifyingSkill, setVerifyingSkill] = useState(false);
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
-
     const fetchUserData = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/user/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             })
             if (response.ok) {
                 const data = await response.json()
@@ -50,21 +47,11 @@ function Settings({ token }) {
                     education: data.education || ''
                 })
 
-                let skillsOffered = [];
-                try {
-                    skillsOffered = data.skills_offered ? JSON.parse(data.skills_offered) : [];
-                    if (!Array.isArray(skillsOffered)) skillsOffered = [];
-                } catch { skillsOffered = []; }
-
-                let skillsWanted = [];
-                try {
-                    skillsWanted = data.skills_wanted ? JSON.parse(data.skills_wanted) : [];
-                    if (!Array.isArray(skillsWanted)) skillsWanted = [];
-                } catch { skillsWanted = []; }
-
+                const skillsOffered = safeJsonParse(data.skills_offered, []);
+                const skillsWanted = safeJsonParse(data.skills_wanted, []);
                 setProfile({
-                    skills_offered: skillsOffered,
-                    skills_wanted: skillsWanted
+                    skills_offered: Array.isArray(skillsOffered) ? skillsOffered : [],
+                    skills_wanted: Array.isArray(skillsWanted) ? skillsWanted : []
                 });
             }
         } catch (error) {
@@ -72,7 +59,7 @@ function Settings({ token }) {
         } finally {
             setLoading(false)
         }
-    }, [token, API_URL])
+    }, [token])
 
     useEffect(() => {
         if (!token) {
@@ -441,6 +428,7 @@ function Settings({ token }) {
                             skill={selectedSkill}
                             onClose={() => setShowCodingModal(false)}
                             onVerified={handleVerificationSuccess}
+                            token={token}
                         />
 
                         <MCQVerificationModal
@@ -448,6 +436,7 @@ function Settings({ token }) {
                             skill={selectedSkill}
                             onClose={() => setShowMCQModal(false)}
                             onVerified={handleVerificationSuccess}
+                            token={token}
                         />
 
                         <div className="pt-4 flex justify-end gap-4">

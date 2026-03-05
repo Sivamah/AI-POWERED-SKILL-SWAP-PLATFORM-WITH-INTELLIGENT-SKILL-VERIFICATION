@@ -118,7 +118,7 @@ class SkillMatcher:
                             if level == "Expert": badge_weight = max(badge_weight, 1.3)
                             elif level == "Intermediate": badge_weight = max(badge_weight, 1.15)
                             elif level == "Beginner": badge_weight = max(badge_weight, 1.05)
-                except:
+                except (json.JSONDecodeError, TypeError, AttributeError):
                     pass
 
                 # Basic Reputation Weighting

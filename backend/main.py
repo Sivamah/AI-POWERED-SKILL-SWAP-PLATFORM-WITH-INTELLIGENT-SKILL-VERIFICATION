@@ -3,22 +3,34 @@ import json
 import logging
 import os
 import asyncio
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
-from pydantic import BaseModel
+from sqlalchemy import func
+from pydantic import BaseModel, validator
 
 from database import create_db_and_tables, get_session
-from models import User, UserCreate, UserRead, UserUpdate, Session as DbSession, SessionBase, Transaction, Review, ReviewCreate, AuditLog, LearningPath, ProjectVerification
+from models import User, UserCreate, UserRead, UserUpdate, Session as DbSession, SessionBase, Transaction, Review, ReviewCreate, AuditLog, LearningPath, ProjectVerification, Certificate
 from auth import get_password_hash, verify_password, create_access_token, get_current_user
 from ai_engine import SkillMatcher
 from seed_data import seed_data
 from quiz_engine import QuizGenerator
 from coding_engine import CodingProblemGenerator, CodeExecutor
 from migrations import run_migrations
+
+
+def safe_json_loads(value: str, default):
+    """Safely parse JSON strings, returning default on failure."""
+    if not value:
+        return default
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return default
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -29,28 +41,16 @@ DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 if DEMO_MODE:
     logger.info("Demo mode enabled")
 
-# Use lifespan instead of deprecated on_event
-from contextlib import asynccontextmanager
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     create_db_and_tables()
-    # Run lightweight migrations
     run_migrations()
-    
-    # Log Routes
-    for route in app.routes:
-        logger.info(f"Route: {route.path} methods={route.methods}")
-    
-    # Seed data for demo mode
     try:
         seed_data()
     except Exception as e:
         logger.error(f"Seed data error (non-fatal): {e}")
     yield
-    # Shutdown (if needed)
-    pass
 
 app = FastAPI(title="Skill Swap AI Platform", lifespan=lifespan)
 
@@ -134,12 +134,9 @@ def register_user(user: UserCreate, session: Session = Depends(get_session)):
     return db_user
 
 @app.get("/users/me", response_model=UserRead)
-async def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
 @app.get("/user/profile", response_model=UserRead)
-async def get_user_profile(current_user: User = Depends(get_current_user)):
-    """Get current user's profile - matches frontend expectation"""
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    """Get current user's profile."""
     return current_user
 
 @app.patch("/user/profile", response_model=UserRead)
@@ -162,7 +159,6 @@ async def update_user_me(user_update: UserUpdate, session: Session = Depends(get
 @app.get("/users/count")
 def get_users_count(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     """Return the total number of registered users."""
-    from sqlalchemy import func
     count = session.exec(select(func.count(User.id))).one()
     return {"total_users": count}
 
@@ -177,24 +173,14 @@ def find_tutor(query: str, session: Session = Depends(get_session), current_user
     results = []
     for m in matches:
         u = m['user']
-        # Parse badges
-        try:
-            badges = json.loads(u.badges)
-        except:
-            badges = {}
-            
-        # Parse skills safely
-        try:
-            skills = json.loads(u.skills_offered)
-        except:
-            skills = []
-            
+        badges = safe_json_loads(u.badges, {})
+        skills = safe_json_loads(u.skills_offered, [])
         results.append({
             "user_id": u.id,
             "name": u.name,
-            "skills": skills,
-            "badges": badges, # Return badges
-            "feedback_summary": u.feedback_summary, # Return summary
+            "skills": skills if isinstance(skills, list) else [],
+            "badges": badges if isinstance(badges, dict) else {},
+            "feedback_summary": u.feedback_summary,
             "reputation": u.reputation_score,
             "similarity_score": "{:.2f}".format(m['similarity']),
             "match_score": "{:.2f}".format(m['match_score'])
@@ -328,9 +314,25 @@ def complete_session(session_id: int, session_db: Session = Depends(get_session)
         tx = Transaction(user_id=teacher.id, amount=1, type="session_earn")
         session_db.add(tx)
     
+    # ── Part 5: Auto-generate completion certificate ──
+    existing_cert = session_db.exec(
+        select(Certificate).where(Certificate.session_id == session_id)
+    ).first()
+    if not existing_cert:
+        cert = Certificate(
+            user_id=current_user.id,
+            course_name=sess.skill_name,
+            mentor_name=teacher.name if teacher else "Unknown Mentor",
+            mentor_id=sess.teacher_id,
+            completion_date=datetime.utcnow(),
+            session_id=session_id
+        )
+        session_db.add(cert)
+        logger.info(f"Certificate generated for session {session_id}")
+    
     session_db.commit()
     log_audit(session_db, "SESSION_COMPLETE", f"Session {session_id} completed", current_user.id)
-    return {"message": "Session completed. Credits transferred."}
+    return {"message": "Session completed. Credits transferred. Certificate issued."}
 
 @app.post("/reviews")
 def submit_review(review_data: ReviewCreate, session_db: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
@@ -401,36 +403,22 @@ def verify_skill(submission: QuizSubmission, session_db: Session = Depends(get_s
     # Badging: 5/5 -> Expert, 4/5 -> Intermediate, 3/5 -> Beginner
     
     if submission.score >= 3:
-        # Load existing verified skills
-        try:
-            verified = json.loads(current_user.verified_skills)
-        except:
+        verified = safe_json_loads(current_user.verified_skills, [])
+        if not isinstance(verified, list):
             verified = []
-            
         if submission.skill not in verified:
             verified.append(submission.skill)
             current_user.verified_skills = json.dumps(verified)
-        
-        # --- NEW: Badge Assignment ---
-        try:
-            badges = json.loads(current_user.badges)
-        except:
+
+        badges = safe_json_loads(current_user.badges, {})
+        if not isinstance(badges, dict):
             badges = {}
-            
-        badge_level = "Beginner"
-        if submission.score == 5:
-            badge_level = "Expert"
-        elif submission.score == 4:
-            badge_level = "Intermediate"
-            
-        # Update badge if new level is higher or not exists
-        # Simplified: always update to latest test result
+        badge_level = "Expert" if submission.score == 5 else "Intermediate" if submission.score == 4 else "Beginner"
         badges[submission.skill] = badge_level
         current_user.badges = json.dumps(badges)
-            
+
         session_db.add(current_user)
         session_db.commit()
-        
         log_audit(session_db, "SKILL_VERIFY", f"Verified skill {submission.skill} with badge {badge_level}", current_user.id)
         return {"verified": True, "message": f"Congrats! You earned the {badge_level} badge in {submission.skill}."}
     else:
@@ -467,27 +455,21 @@ def verify_project_skill(submission: ProjectSubmission, session_db: Session = De
     session_db.add(db_submission)
     
     if is_approved:
-        # 3. Update User Badges & Verified Skills
-        try:
-            verified = json.loads(current_user.verified_skills)
-        except:
+        verified = safe_json_loads(current_user.verified_skills, [])
+        if not isinstance(verified, list):
             verified = []
-            
         if submission.skill_name not in verified:
             verified.append(submission.skill_name)
             current_user.verified_skills = json.dumps(verified)
-            
-        try:
-            badges = json.loads(current_user.badges)
-        except:
+
+        badges = safe_json_loads(current_user.badges, {})
+        if not isinstance(badges, dict):
             badges = {}
-            
         badges[submission.skill_name] = badge_level
         current_user.badges = json.dumps(badges)
-        
+
         session_db.add(current_user)
         session_db.commit()
-        
         log_audit(session_db, "PROJECT_VERIFY", f"Verified project for {submission.skill_name} ({badge_level})", current_user.id)
         return {
             "verified": True,
@@ -687,47 +669,35 @@ def submit_coding_verification(
     Submit final coding verification
     User must pass ALL test cases for BOTH problems to verify skill
     """
-    # Check if all problems passed
     all_passed = all(result.get("passed", False) for result in submission.problem_results)
-    
+
     if all_passed and len(submission.problem_results) == 2:
-        # Update verified skills
-        try:
-            verified = json.loads(current_user.verified_skills)
-        except:
+        verified = safe_json_loads(current_user.verified_skills, [])
+        if not isinstance(verified, list):
             verified = []
-        
         if submission.skill not in verified:
             verified.append(submission.skill)
             current_user.verified_skills = json.dumps(verified)
-        
-        # Assign badge (for coding challenges, always Expert if passed)
-        try:
-            badges = json.loads(current_user.badges)
-        except:
+
+        badges = safe_json_loads(current_user.badges, {})
+        if not isinstance(badges, dict):
             badges = {}
-        
         badges[submission.skill] = "Expert"
         current_user.badges = json.dumps(badges)
-        
-        # Update verification scores
-        try:
-            scores = json.loads(current_user.verification_scores) if current_user.verification_scores else {}
-        except:
+
+        scores = safe_json_loads(current_user.verification_scores, {})
+        if not isinstance(scores, dict):
             scores = {}
-        
         scores[submission.skill] = {
             "score": 100,
             "method": "coding",
             "date": datetime.utcnow().isoformat()
         }
         current_user.verification_scores = json.dumps(scores)
-        
+
         session_db.add(current_user)
         session_db.commit()
-        
         log_audit(session_db, "CODING_VERIFY", f"Verified {submission.skill} via coding challenge", current_user.id)
-        
         return {
             "verified": True,
             "badge": "Expert",
@@ -767,62 +737,42 @@ def submit_mcq_verification(
     Submit MCQ answers and verify skill
     Passing criteria: 7/10 or higher
     """
-    # Calculate score
-    correct_count = 0
     total_questions = len(submission.questions)
-    
-    for i, question in enumerate(submission.questions):
-        if i < len(submission.answers) and submission.answers[i] == question["answer"]:
-            correct_count += 1
-    
+    correct_count = sum(
+        1 for i, q in enumerate(submission.questions)
+        if i < len(submission.answers) and submission.answers[i] == q.get("answer")
+    )
     score_percentage = (correct_count / total_questions) * 100 if total_questions > 0 else 0
     passed = correct_count >= 7  # 7/10 required
-    
+
     if passed:
-        # Update verified skills
-        try:
-            verified = json.loads(current_user.verified_skills)
-        except:
+        verified = safe_json_loads(current_user.verified_skills, [])
+        if not isinstance(verified, list):
             verified = []
-        
         if submission.skill not in verified:
             verified.append(submission.skill)
             current_user.verified_skills = json.dumps(verified)
-        
-        # Assign badge based on score
-        try:
-            badges = json.loads(current_user.badges)
-        except:
+
+        badges = safe_json_loads(current_user.badges, {})
+        if not isinstance(badges, dict):
             badges = {}
-        
-        if correct_count >= 9:
-            badge_level = "Expert"
-        elif correct_count >= 8:
-            badge_level = "Intermediate"
-        else:
-            badge_level = "Beginner"
-        
+        badge_level = "Expert" if correct_count >= 9 else "Intermediate" if correct_count >= 8 else "Beginner"
         badges[submission.skill] = badge_level
         current_user.badges = json.dumps(badges)
-        
-        # Update verification scores
-        try:
-            scores = json.loads(current_user.verification_scores) if current_user.verification_scores else {}
-        except:
+
+        scores = safe_json_loads(current_user.verification_scores, {})
+        if not isinstance(scores, dict):
             scores = {}
-        
         scores[submission.skill] = {
             "score": score_percentage,
             "method": "mcq",
             "date": datetime.utcnow().isoformat()
         }
         current_user.verification_scores = json.dumps(scores)
-        
+
         session_db.add(current_user)
         session_db.commit()
-        
         log_audit(session_db, "MCQ_VERIFY", f"Verified {submission.skill} via MCQ ({correct_count}/{total_questions})", current_user.id)
-        
         return {
             "verified": True,
             "score": correct_count,
@@ -839,6 +789,56 @@ def submit_mcq_verification(
             "percentage": score_percentage,
             "message": f"You scored {correct_count}/{total_questions}. You need at least 7/10 to pass. Please try again."
         }
+
+# ============================================
+# CERTIFICATE ENDPOINTS
+# ============================================
+
+@app.get("/certificates")
+def get_my_certificates(session_db: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    """Get all certificates earned by the current user."""
+    certs = session_db.exec(
+        select(Certificate).where(Certificate.user_id == current_user.id)
+    ).all()
+    results = []
+    for c in certs:
+        results.append({
+            "id": c.id,
+            "user_id": c.user_id,
+            "user_name": current_user.name,
+            "course_name": c.course_name,
+            "mentor_name": c.mentor_name,
+            "mentor_id": c.mentor_id,
+            "completion_date": c.completion_date.isoformat() if c.completion_date else None,
+            "session_id": c.session_id,
+            "certificate_url": c.certificate_url
+        })
+    return results
+
+@app.get("/certificates/{cert_id}")
+def get_certificate(
+    cert_id: int,
+    session_db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Get a specific certificate by ID."""
+    cert = session_db.get(Certificate, cert_id)
+    if not cert:
+        raise HTTPException(status_code=404, detail="Certificate not found")
+    if cert.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return {
+        "id": cert.id,
+        "user_id": cert.user_id,
+        "user_name": current_user.name,
+        "course_name": cert.course_name,
+        "mentor_name": cert.mentor_name,
+        "mentor_id": cert.mentor_id,
+        "completion_date": cert.completion_date.isoformat() if cert.completion_date else None,
+        "session_id": cert.session_id,
+        "certificate_url": cert.certificate_url,
+        "platform": "Skill Swap AI"
+    }
 
 if __name__ == "__main__":
     import uvicorn

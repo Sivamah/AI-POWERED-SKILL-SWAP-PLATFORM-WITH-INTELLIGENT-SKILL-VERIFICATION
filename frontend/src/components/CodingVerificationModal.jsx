@@ -1,27 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../services/api';
 
-const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
+// Lazy-load Monaco Editor — it's ~2MB and only needed when this modal is open
+const Editor = lazy(() => import('@monaco-editor/react'));
+
+// Fallback shown while Monaco loads
+const EditorFallback = () => (
+    <div className="flex items-center justify-center h-full bg-[#1e1e1e]">
+        <div className="flex items-center gap-3 text-slate-400">
+            <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-mono">Loading editor...</span>
+        </div>
+    </div>
+);
+
+const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified, token }) => {
     const [step, setStep] = useState(0); // 0: Intro, 1: Problem 1, 2: Problem 2, 3: Success
     const [problems, setProblems] = useState([]);
-    const [currentCode, setCurrentCode] = useState("");
+    const [currentCode, setCurrentCode] = useState('');
     const [loading, setLoading] = useState(false);
-    const [fetchError, setFetchError] = useState(null); // Error loading problems
+    const [fetchError, setFetchError] = useState(null);
     const [testResults, setTestResults] = useState(null);
     const [executionError, setExecutionError] = useState(null);
-    const [problemResults, setProblemResults] = useState([]); // [{problem_id, passed}]
-    const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes total
-
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const [problemResults, setProblemResults] = useState([]);
+    const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes
 
     const fetchProblems = async () => {
         if (!skill) return; // Guard: don't fetch if skill is null/undefined
         setLoading(true);
         setFetchError(null);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         try {
-            const res = await axios.get(`${API_URL}/api/verify/coding-problems?language=${skill.toLowerCase()}`);
+            const res = await axios.get(`${API_URL}/api/verify/coding-problems?language=${skill.toLowerCase()}`, { headers });
             if (res.data && Array.isArray(res.data) && res.data.length > 0) {
                 setProblems(res.data);
             } else {
@@ -96,12 +108,13 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
         }
 
         try {
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
             const res = await axios.post(`${API_URL}/api/verify/execute-code`, {
                 language: skill,
                 code: currentCode,
                 problem_id: currentProblem.id,
-                run_mode: "test" // Run only visible test cases
-            }, { timeout: 60000 }); // 60s timeout — Java via Piston can take ~25s
+                run_mode: "test"
+            }, { timeout: 60000, headers });
 
             if (res.data.error) {
                 setExecutionError(res.data.error);
@@ -146,7 +159,7 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                 code: currentCode,
                 problem_id: currentProblem.id,
                 run_mode: "submit"
-            }, { timeout: 60000 }); // 60s timeout — Java via Piston can take ~25s
+            }, { timeout: 60000, headers: token ? { Authorization: `Bearer ${token}` } : {} }); // 60s timeout
 
             // Check if response has error
             if (res.data.error) {
@@ -196,11 +209,12 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
 
     const submitFinalVerification = async (results) => {
         try {
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
             const res = await axios.post(`${API_URL}/api/verify/coding-submit`, {
                 skill: skill,
                 language: skill,
                 problem_results: results
-            });
+            }, { headers });
 
             if (res.data.verified) {
                 setStep(3);
@@ -365,21 +379,23 @@ const CodingVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                 {/* Right: Code Editor & Console */}
                                 <div className="col-span-8 flex flex-col h-full bg-[#0f172a]">
                                     <div className="flex-1 relative">
-                                        <Editor
-                                            height="100%"
-                                            defaultLanguage={skill === 'cpp' ? 'cpp' : skill === 'js' ? 'javascript' : skill}
-                                            language={skill === 'cpp' ? 'cpp' : skill === 'js' ? 'javascript' : skill}
-                                            value={currentCode}
-                                            onChange={(val) => setCurrentCode(val)}
-                                            theme="vs-dark"
-                                            options={{
-                                                minimap: { enabled: false },
-                                                fontSize: 14,
-                                                fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-                                                scrollBeyondLastLine: false,
-                                                padding: { top: 20 },
-                                            }}
-                                        />
+                                        <Suspense fallback={<EditorFallback />}>
+                                            <Editor
+                                                height="100%"
+                                                defaultLanguage={skill === 'cpp' ? 'cpp' : skill === 'js' ? 'javascript' : skill}
+                                                language={skill === 'cpp' ? 'cpp' : skill === 'js' ? 'javascript' : skill}
+                                                value={currentCode}
+                                                onChange={(val) => setCurrentCode(val)}
+                                                theme="vs-dark"
+                                                options={{
+                                                    minimap: { enabled: false },
+                                                    fontSize: 14,
+                                                    fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+                                                    scrollBeyondLastLine: false,
+                                                    padding: { top: 20 },
+                                                }}
+                                            />
+                                        </Suspense>
                                     </div>
 
                                     {/* Console / Output Area */}

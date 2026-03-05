@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../services/api';
 
-const MCQVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
+const MCQVerificationModal = ({ isOpen, onClose, skill, onVerified, token }) => {
     const [step, setStep] = useState(0); // 0: Intro, 1: Quiz, 2: Result
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -11,15 +12,14 @@ const MCQVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
     const [result, setResult] = useState(null);
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
     const fetchQuestions = async () => {
         setLoading(true);
         try {
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
             const res = await axios.post(`${API_URL}/api/verify/mcq-questions`, {
                 skill: skill,
                 num_questions: 10
-            });
+            }, { headers });
             setQuestions(res.data);
             setAnswers(new Array(res.data.length).fill(null));
         } catch {
@@ -44,11 +44,12 @@ const MCQVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
     const submitQuiz = async (isTimeout = false) => {
         setLoading(true);
         try {
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
             const res = await axios.post(`${API_URL}/api/verify/mcq-submit`, {
                 skill: skill,
                 answers: answers,
                 questions: questions
-            });
+            }, { headers });
             setResult(res.data);
             setStep(2);
             if (res.data.verified) {
@@ -196,9 +197,18 @@ const MCQVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                 className="w-full max-w-3xl mx-auto"
                             >
                                 <div className="mb-8">
-                                    <h3 className="text-xl font-bold mb-6 text-white leading-relaxed">
-                                        {currentQuestionIndex + 1}. {questions[currentQuestionIndex].q}
-                                    </h3>
+                                    {/* Question text with proper wrapping and code block support */}
+                                    <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/5">
+                                        <p className="text-lg font-bold text-white leading-relaxed whitespace-pre-wrap break-words">
+                                            {currentQuestionIndex + 1}. {questions[currentQuestionIndex].q}
+                                        </p>
+                                        {/* If the question contains code (backtick notation or looks like code), show in code block */}
+                                        {questions[currentQuestionIndex].code && (
+                                            <pre className="mt-3 p-3 bg-black/40 rounded-lg border border-white/10 text-cyan-300 text-sm font-mono overflow-x-auto whitespace-pre-wrap">
+                                                <code>{questions[currentQuestionIndex].code}</code>
+                                            </pre>
+                                        )}
+                                    </div>
                                     <div className="space-y-3">
                                         {questions[currentQuestionIndex].options.map((option, idx) => (
                                             <button
@@ -209,14 +219,14 @@ const MCQVerificationModal = ({ isOpen, onClose, skill, onVerified }) => {
                                                     : 'bg-white/5 border-white/5 text-slate-300 hover:bg-white/10 hover:border-white/10'
                                                     }`}
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs ${answers[currentQuestionIndex] === option
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-6 h-6 rounded-full border flex-shrink-0 flex items-center justify-center text-xs mt-0.5 ${answers[currentQuestionIndex] === option
                                                         ? 'bg-blue-500 border-blue-500 text-white'
                                                         : 'border-slate-600 text-slate-600'
                                                         }`}>
                                                         {['A', 'B', 'C', 'D'][idx]}
                                                     </div>
-                                                    {option}
+                                                    <span className="break-words whitespace-pre-wrap">{option}</span>
                                                 </div>
                                             </button>
                                         ))}

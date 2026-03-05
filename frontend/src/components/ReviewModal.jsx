@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { API_URL } from '../services/api'
 
 export default function ReviewModal({ isOpen, onClose, sessionId, onSuccess, token }) {
     const [rating, setRating] = useState(5)
     const [comment, setComment] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
     if (!isOpen) return null
 
